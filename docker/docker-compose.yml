@@ -1,0 +1,13 @@
+services:
+  db:
+    image: apache/age:dev_snapshot_PG17
+    container_name: pkb-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: pkb
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - ./data:/var/lib/postgresql/data
