@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+# set -o xtrace
+
+
+# -----------------------------------------------------------------------------
+# Helper functions start with _ and aren't listed in this script's help menu.
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
+# Tasks
+# -----------------------------------------------------------------------------
+
+function help {
+  # : "Auto-generate list of tasks, including documentation in the form of these noop statements"
+  # : "They can span multiple lines if needed"
+  printf "%s <task> [args]\n\nTasks:\n" "${0}"
+  compgen -A function | grep -v "^_" | while read -r name ; do
+    task_desc=$(type "$name" | sed -nEe 's/^[[:space:]]*: ?"(.*)";/\1/p' | tr '\n' ' ')
+    task_desc=$(printf "%s\n" "$task_desc" | fold -sw 80 | awk 'NR>1 {$0 = sprintf("%26s%s", "", $0)} 1') # hanging paragraph
+    printf "     %-20s %s\n" "$name" "$task_desc"
+  done
+  printf "\nFor extended help refer to ./Taskfile\n"
+}
+
+pgpass="./volumes/pgpass.txt"
+
+function create_pgpass {
+  : "Create pgpass file with credentials for PostgreSQL."
+  echo "localhost:5432:*:user:pass" > $pgpass
+  chmod 600 $pgpass
+}
+
+function recreate_db {
+  : "Recreate the PostgreSQL database."
+  # ToDo: -U and pgpass file.
+  docker compose exec db psql -d postgres -U user -c "DROP DATABASE pkb;"
+  docker compose exec db psql -d postgres -U user -c "CREATE DATABASE pkb;"
+}
+
+function attach {
+  : "Attach to the Docker container running PostgreSQL."
+  docker compose exec -ti db bash
+}
+
+function sql_test {
+  : "Run a simple SQL command to test the connection to PostgreSQL."
+  sql "SELECT now();"
+}
+
+function sql {
+  : "Run a SQL using psql."
+  # ToDo: Why we need -U user here? Why it is not enough to use the pgpass file?
+  docker compose exec db psql -d pkb -U user -c "${@}"
+}
+
+function up {
+  : "Start the Docker containers."
+  docker compose up -d
+}
+
+function down {
+  : "Stop the Docker containers."
+  docker compose down
+}
+
+function restart {
+  : "Restart the Docker containers."
+  down
+  up
+}
+
+TIMEFORMAT="Task completed in %3lR"
+time "${@:-help}"

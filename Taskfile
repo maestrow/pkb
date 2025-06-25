@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+# set -o xtrace
+
+
+# -----------------------------------------------------------------------------
+# Helper functions start with _ and aren't listed in this script's help menu.
+# -----------------------------------------------------------------------------
+
+
+
+
+# -----------------------------------------------------------------------------
+# Tasks
+# -----------------------------------------------------------------------------
+
+function help {
+  # : "Auto-generate list of tasks, including documentation in the form of these noop statements"
+  # : "They can span multiple lines if needed"
+  printf "%s <task> [args]\n\nTasks:\n" "${0}"
+  compgen -A function | grep -v "^_" | while read -r name ; do
+    task_desc=$(type "$name" | sed -nEe 's/^[[:space:]]*: ?"(.*)";/\1/p' | tr '\n' ' ')
+    task_desc=$(printf "%s\n" "$task_desc" | fold -sw 80 | awk 'NR>1 {$0 = sprintf("%26s%s", "", $0)} 1') # hanging paragraph
+    printf "     %-20s %s\n" "$name" "$task_desc"
+  done
+  printf "\nFor extended help refer to ./Taskfile\n"
+}
+
+
+TIMEFORMAT="Task completed in %3lR"
+time "${@:-help}"
