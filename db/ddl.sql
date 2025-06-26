@@ -3,27 +3,35 @@ DROP TYPE IF EXISTS file_type CASCADE;
 DROP TYPE IF EXISTS prop_type CASCADE;
 
 -- Recreate ENUM types
-CREATE TYPE file_type AS ENUM ('main', 'content', 'component', 'data', 'attachment');
-CREATE TYPE prop_type AS ENUM ('str', 'int', 'ref');
+CREATE TYPE file_type AS ENUM ('main', 'content', 'component', 'css', 'code', 'data', 'attachment');
+CREATE TYPE prop_type AS ENUM ('str', 'int', 'ref', 'url');
 
 -- Drop tables if they exist
 DROP TABLE IF EXISTS props CASCADE;
 DROP TABLE IF EXISTS files CASCADE;
+DROP TABLE IF EXISTS urls CASCADE;
 DROP TABLE IF EXISTS pages CASCADE;
 
--- Create `pages` table
 CREATE TABLE pages (
-  id          BIGINT PRIMARY KEY,
+  id          BIGINT PRIMARY KEY DEFAULT ('x' || encode(gen_random_bytes(8), 'hex'))::bit(64)::bigint,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   title       varchar(255),
+  summary     TEXT,
   aliases     varchar(255)[] DEFAULT NULL,
   shortcut    varchar(100) DEFAULT NULL, -- For quick access to pages
 
   CONSTRAINT unique_shortcut UNIQUE (shortcut)
 );
 
--- Create `files` table
+CREATE TABLE urls (
+  id          BIGINT PRIMARY KEY DEFAULT ('x' || encode(gen_random_bytes(8), 'hex'))::bit(64)::bigint,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  url         TEXT NOT NULL,
+  UNIQUE (url)
+);
+
 CREATE TABLE files (
   id          BIGINT PRIMARY KEY, -- inode
   page_id     BIGINT NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
@@ -36,7 +44,6 @@ CREATE TABLE files (
   meta        JSONB
 );
 
--- Create `props` table
 CREATE TABLE props (
   from_id     BIGINT REFERENCES pages(id) ON DELETE CASCADE,
   prop_id     BIGINT REFERENCES pages(id) ON DELETE CASCADE,
@@ -45,8 +52,10 @@ CREATE TABLE props (
   value_str   TEXT,
   value_int   BIGINT,
   value_ref   BIGINT REFERENCES pages(id) ON DELETE CASCADE,
+  value_url   BIGINT REFERENCES urls(id) ON DELETE CASCADE,
   PRIMARY KEY (from_id, alias)
 );
+
 
 -- Drop indexes if they exist
 DROP INDEX IF EXISTS idx_pages_aliases_gin;
@@ -54,10 +63,23 @@ DROP INDEX IF EXISTS idx_props_type;
 DROP INDEX IF EXISTS idx_props_value_str;
 DROP INDEX IF EXISTS idx_props_value_int;
 DROP INDEX IF EXISTS idx_props_value_ref;
+DROP INDEX IF EXISTS idx_props_value_url;
 
 -- Create indexes
 CREATE INDEX idx_pages_aliases_gin ON pages USING GIN (aliases);
+CREATE INDEX idx_pages_title ON pages(title);
+CREATE INDEX idx_pages_shortcut ON pages(shortcut);
+
 CREATE INDEX idx_props_type ON props(type);
 CREATE INDEX idx_props_value_str ON props(value_str);
 CREATE INDEX idx_props_value_int ON props(value_int);
 CREATE INDEX idx_props_value_ref ON props(value_ref);
+CREATE INDEX idx_props_value_url ON props(value_url);
+
+CREATE INDEX idx_urls_url ON urls(url);
+
+CREATE INDEX idx_files_page_id ON files(page_id);
+CREATE INDEX idx_files_type ON files(type);
+CREATE INDEX idx_files_path ON files(path);
+CREATE INDEX idx_files_alias ON files(alias);
+CREATE INDEX idx_files_title ON files(title);
