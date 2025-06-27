@@ -3,12 +3,14 @@
   "module": "src/cli.ts",
   "type": "module",
   "devDependencies": {
+    "@pgtyped/cli": "^2.4.3",
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@pgtyped/runtime": "^2.4.2",
     "commander": "^14.0.0"
   }
 }

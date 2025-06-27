@@ -12,3 +12,4 @@ services:
     volumes:
       - ./data:/var/lib/postgresql/data
       - ./volumes/pgpass.txt:/root/.pgpass:ro
+      - ../db/sql:/scripts

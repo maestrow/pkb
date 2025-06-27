@@ -36,29 +36,6 @@ function create_pgpass {
   chmod 600 $pgpass
 }
 
-function recreate_db {
-  : "Recreate the PostgreSQL database."
-  # ToDo: -U and pgpass file.
-  docker compose exec db psql -d postgres -U user -c "DROP DATABASE pkb;"
-  docker compose exec db psql -d postgres -U user -c "CREATE DATABASE pkb;"
-}
-
-function attach {
-  : "Attach to the Docker container running PostgreSQL."
-  docker compose exec -ti db bash
-}
-
-function sql_test {
-  : "Run a simple SQL command to test the connection to PostgreSQL."
-  sql "SELECT now();"
-}
-
-function sql {
-  : "Run a SQL using psql."
-  # ToDo: Why we need -U user here? Why it is not enough to use the pgpass file?
-  docker compose exec db psql -d pkb -U user -c "${@}"
-}
-
 function up {
   : "Start the Docker containers."
   docker compose up -d
