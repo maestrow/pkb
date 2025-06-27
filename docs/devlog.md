@@ -38,3 +38,24 @@ You can edit the properties of the current note. And copy reference links to the
 
     kb view
 
+
+# 250627 Thinking about DAL, ORM
+
+- https://www.reddit.com/r/node/comments/1g0qekb/how_to_best_design_my_schema_in_postgres_when/
+- https://jakerobins.com/blog/exploring-the-problem-database-tooling-in-node-js
+- https://jakerobins.com/blog/a-simple-solution-pgtyped
+
+Packages:
+- node-postgres
+
+I want:
+- To be able to write raw SQL. Which means you have control over it and can make it effecient.
+- Database as the Source of Truth.
+
+A solution: PgTyped
+
+- https://pgtyped.dev/
+
+# 250627 Migrations
+
+framework-agnostic database migration tool.
